@@ -32,6 +32,12 @@ public class RemindMeClient {
 		}
 	}
 	
+	private boolean authenticate() {
+		this.socket_writer.write("beerent");
+		String result = this.socket_reader.read();
+		return result.equals("OK");
+	}
+
 	//returns true if server responds with a 1, aka this client has updates
 	private boolean checkForUpdates(){
 		connect();
@@ -61,7 +67,7 @@ public class RemindMeClient {
 			Socket socket = new Socket(server_address, server_port);
 			this.socket_reader = new SocketReader(socket);
 			this.socket_writer = new SocketWriter(socket);
-			socket_writer.write("brent");
+			socket_writer.write("beerent");
 			String ok = socket_reader.read();
 			if (ok.equals("OK"))
 				return socket;
