@@ -85,4 +85,12 @@ public class DatabaseHandler {
 			e.printStackTrace();
 		}
 	}
+	
+	public void disconnect(){
+		try {
+			this.conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 }

@@ -19,7 +19,7 @@ public class Reminder {
 		return reminder;
 	}
 	
-	public boolean idRead(){
+	public boolean isRead(){
 		return read;
 	}
 	
