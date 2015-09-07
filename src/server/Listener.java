@@ -92,34 +92,38 @@ public class Listener extends Thread{
 					case "reminders":
 						ArrayList<Reminder> reminders;
 						serverLog(4, "reminders");
+						String op = null;
 						switch(request.get(i++)){
 							case "new":
-								reminders = reminder_dao.getReminders(database_handler, user);
-								XMLWriter xml = new XMLWriter();
-								serverLog(2, "sending " + reminders.size() + " reminders");
-								xml.openParent("reminders");
-								for(Reminder reminder : reminders){
-									xml.openParent("reminder");
-									xml.addChild("id", "" + reminder.getReminderID());
-									xml.addChild("text", reminder.getReminder());
-									String read = "0";
-									if(reminder.isRead())
-										read = "1";
-									xml.addChild("read", read);
-									xml.closeParent("reminder");
-								}
-								xml.closeParent("reminders");
-							try {
-								socket_writer.write(xml.getXML());
-							} catch (Exception e) {
-								socket_writer.write("ERR");
-								e.printStackTrace();
-							}
+								op = "new";
 								break;
-							case "old":
+							case "read":
+								op = "read";
 								break;
 							case "all":
+								op = "all";
 								break;
+						}
+						reminders = reminder_dao.getReminders(database_handler, user, op);
+						XMLWriter xml = new XMLWriter();
+						serverLog(2, "sending " + reminders.size() + " reminders");
+						xml.openParent("reminders");
+						for(Reminder reminder : reminders){
+							xml.openParent("reminder");
+							xml.addChild("id", "" + reminder.getReminderID());
+							xml.addChild("text", reminder.getReminder());
+							String read = "0";
+							if(reminder.isRead())
+								read = "1";
+							xml.addChild("read", read);
+							xml.closeParent("reminder");
+						}
+						xml.closeParent("reminders");
+						try {
+							socket_writer.write(xml.getXML());
+						} catch (Exception e) {
+							socket_writer.write("ERR");
+							e.printStackTrace();
 						}
 						break;
 				}		
@@ -133,6 +137,24 @@ public class Listener extends Thread{
 						serverLog(2, "adding reminder to database: " + reminder);
 						reminder_dao.addReminder(database_handler, user, reminder);
 						socket_writer.write("OK");
+						break;
+				}
+				break;
+			case "update":
+				serverLog(4, "update");
+				switch(request.get(i++)){
+					case "reminder":
+						serverLog(4, "reminder");
+						Reminder reminder = new Reminder(Integer.parseInt(request.get(i++)));
+						serverLog(4, "updating reminder: " + reminder.getReminderID());
+						switch(request.get(i++)){
+							case "read":
+								serverLog(4, "read");
+								int read = Integer.parseInt(request.get(i));
+								serverLog(4, "updating to read: " + read);
+								reminder_dao.markReminderAsRead(this.database_handler, user, reminder, read);
+								break;
+						}
 						break;
 				}
 				break;

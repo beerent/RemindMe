@@ -24,8 +24,21 @@ public class RemindMeClient {
 		
 		//client.register("beerent1", "email1", "password");
 		
-		client.addReminder("beerent1", "password");
-		client.getAndDisplayNewReminders("beerent1", "password");
+		//client.addReminder("beerent1", "password");
+		client.getAndDisplayReadReminders("beerent1", "password");
+		
+		//client.markRemiderAsRead("beerent1", "password", 17, 1);
+	}
+	
+	private void markRemiderAsRead(String username, String password, int reminder_id, int read){
+		connect(username, password);
+		this.socket_writer.write("update");
+		this.socket_writer.write("reminder");
+		this.socket_writer.write("" + reminder_id);	
+		this.socket_writer.write("read");
+		this.socket_writer.write("" + read);
+		this.socket_writer.write("^]");
+		disconnect();		
 	}
 	
 	private void register(String username, String email, String password){
@@ -80,11 +93,11 @@ public class RemindMeClient {
 	}
 	
 	//request all new reminders from server for this client
-	private void getAndDisplayOldReminders(String username, String password){
+	private void getAndDisplayReadReminders(String username, String password){
 		connect(username, password);
 		this.socket_writer.write("get");
 		this.socket_writer.write("reminders");
-		this.socket_writer.write("old");
+		this.socket_writer.write("read");
 		this.socket_writer.write("^]");
 		String xml_reminders = this.socket_reader.read();
 		System.out.println("reminders: " + xml_reminders);

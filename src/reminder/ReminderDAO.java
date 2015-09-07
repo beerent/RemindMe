@@ -18,10 +18,20 @@ public class ReminderDAO {
 		return instance;
 	}
 	
-	public ArrayList<Reminder> getReminders(DatabaseHandler database_handler, User user){
+	public ArrayList<Reminder> getReminders(DatabaseHandler database_handler, User user, String option){
 		ArrayList<Reminder> reminders = new ArrayList<Reminder>();
 		
-		String sql = "select reminder, reminder_id, is_read from reminders where user_id = " + user.getUserID();
+		String sql = null;
+		if(option.equals("new"))
+			sql = "select reminder, reminder_id, is_read from reminders where user_id = " + user.getUserID() + " and is_read = " + 0;
+		if(option.equals("read"))
+			sql = "select reminder, reminder_id, is_read from reminders where user_id = " + user.getUserID() + " and is_read = " + 1;
+		if(option.equals("all"))
+			sql = "select reminder, reminder_id, is_read from reminders where user_id = " + user.getUserID();
+		
+		if(sql == null)
+			return null;
+		
 		QueryResult result = database_handler.executeQuery(sql);
 
 		for(int i = 0; i < result.numRows(); i++){
@@ -42,6 +52,11 @@ public class ReminderDAO {
 	
 	public void addReminder(DatabaseHandler database_handler, User user, String reminder){
 		String sql = "insert into reminders (user_id, reminder) values (" + user.getUserID() + ", '"+ reminder +"')";
+		database_handler.executeInsert(sql);
+	}
+	
+	public void markReminderAsRead(DatabaseHandler database_handler, User user, Reminder reminder, int read){
+		String sql = "update reminders set is_read = "+ read +" where reminder_id = " + reminder.getReminderID();
 		database_handler.executeInsert(sql);
 	}
 }
