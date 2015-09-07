@@ -21,13 +21,35 @@ public class RemindMeClient {
 	
 	public static void main(String[] args) {
 		RemindMeClient client = new RemindMeClient();
-		client.addReminder();
-		client.getAndDisplayNewReminders();
+		
+		//client.register("beerent1", "email1", "password");
+		
+		client.addReminder("beerent1", "password");
+		client.getAndDisplayNewReminders("beerent1", "password");
+	}
+	
+	private void register(String username, String email, String password){
+		try {
+			Socket socket = new Socket(server_address, server_port);
+			this.socket_reader = new SocketReader(socket);
+			this.socket_writer = new SocketWriter(socket);
+			socket_writer.write("register");
+			socket_reader.read(); //OK
+			socket_writer.write(username);
+			socket_writer.write(email);
+			socket_writer.write(password);
+			socket_writer.write(password);
+			String ok = socket_reader.read();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	//returns true if server responds with a 1, aka this client has updates
-	private boolean checkForUpdates(){
-		connect();
+	private boolean checkForUpdates(String username, String password){
+		connect(username, password);
 		this.socket_writer.write("get");
 		this.socket_writer.write("updates");
 		this.socket_writer.write("^]");
@@ -36,8 +58,8 @@ public class RemindMeClient {
 		return result == 1;
 	}
 	
-	private void addReminder(){
-		connect();
+	private void addReminder(String username, String password){
+		connect(username, password);
 		this.socket_writer.write("add");
 		this.socket_writer.write("reminder");
 		this.socket_writer.write("this is a test reminder");
@@ -46,8 +68,8 @@ public class RemindMeClient {
 	}
 	
 	//request all new reminders from server for this client
-	private void getAndDisplayAllReminders(){
-		connect();
+	private void getAndDisplayAllReminders(String username, String password){
+		connect(username, password);
 		this.socket_writer.write("get");
 		this.socket_writer.write("reminders");
 		this.socket_writer.write("all");
@@ -58,8 +80,8 @@ public class RemindMeClient {
 	}
 	
 	//request all new reminders from server for this client
-	private void getAndDisplayOldReminders(){
-		connect();
+	private void getAndDisplayOldReminders(String username, String password){
+		connect(username, password);
 		this.socket_writer.write("get");
 		this.socket_writer.write("reminders");
 		this.socket_writer.write("old");
@@ -70,8 +92,8 @@ public class RemindMeClient {
 	}
 	
 	//request all new reminders from server for this client
-	private void getAndDisplayNewReminders(){
-		connect();
+	private void getAndDisplayNewReminders(String username, String password){
+		connect(username, password);
 		this.socket_writer.write("get");
 		this.socket_writer.write("reminders");
 		this.socket_writer.write("new");
@@ -82,13 +104,15 @@ public class RemindMeClient {
 	}
 	
 	//set IO objects connected to socket
-	private Socket connect(){
+	private Socket connect(String username, String password){
 		try {
 			Socket socket = new Socket(server_address, server_port);
 			this.socket_reader = new SocketReader(socket);
 			this.socket_writer = new SocketWriter(socket);
-			socket_writer.write("beerent");
-			socket_writer.write("password1");
+			socket_writer.write("login");
+			socket_reader.read();
+			socket_writer.write(username);
+			socket_writer.write(password);
 			String ok = socket_reader.read();
 			if (ok.equals("OK"))
 				return socket;

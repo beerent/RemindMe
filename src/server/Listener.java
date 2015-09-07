@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import database.DatabaseHandler;
 import logger.Logger;
+import registration.Registrator;
 import reminder.Reminder;
 import reminder.ReminderDAO;
 import socketio.SocketReader;
@@ -35,11 +36,26 @@ public class Listener extends Thread{
 	}
 	
 	public void run(){
-		UserAuthenticator user_auth = UserAuthenticator.getInstance();
-		
 		SocketReader socket_reader = new SocketReader(socket);
 		SocketWriter socket_writer = new SocketWriter(socket);
 		
+		String operation = socket_reader.read();
+		
+		serverLog(1, "opertation requested: " + operation);
+		switch(operation){
+			case "login":
+				login(socket_writer, socket_reader);
+				break;
+			case "register":
+				register(socket_writer, socket_reader);
+				break;
+		}
+	}
+	
+	private void login(SocketWriter socket_writer, SocketReader socket_reader){
+		UserAuthenticator user_auth = UserAuthenticator.getInstance();
+		
+		socket_writer.write("OK"); //OK
 		String username = socket_reader.read();
 		String password = socket_reader.read();
 		
@@ -121,6 +137,18 @@ public class Listener extends Thread{
 				}
 				break;
 		}
+	}
+	
+	private void register(SocketWriter socket_writer, SocketReader socket_reader){
+		Registrator registrator = new Registrator(this.database_handler);
+		socket_writer.write("OK");
+		String username = socket_reader.read();
+		String email = socket_reader.read();
+		String password1 = socket_reader.read();
+		String password2 = socket_reader.read();
+		serverLog(2, "registering: + " + username + ", " + email + ", " + password1 + ", " + password2);
+		registrator.registerUser(username, email, password1, password2);
+		serverLog(2, "user: " + username + " logged");
 	}
 	
 	private void invalidUser(String username){

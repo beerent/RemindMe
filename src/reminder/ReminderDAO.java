@@ -23,8 +23,7 @@ public class ReminderDAO {
 		
 		String sql = "select reminder, reminder_id, is_read from reminders where user_id = " + user.getUserID();
 		QueryResult result = database_handler.executeQuery(sql);
-		if(!result.containsData())
-			return null;
+
 		for(int i = 0; i < result.numRows(); i++){
 			String reminder = result.getElement(i, 0);
 			int reminder_id = Integer.parseInt(result.getElement(i,  1));

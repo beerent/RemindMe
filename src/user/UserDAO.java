@@ -44,4 +44,10 @@ public class UserDAO {
 		return result.containsData();
 			
 	}
+
+	public boolean registerUser(DatabaseHandler database_handler, String username, String email, String password) {
+		String sql = "insert into users (username, email, password) values ('"+ username +"', '"+ email +"', '"+ password +"')";
+		database_handler.executeInsert(sql);
+		return true;
+	}
 }
