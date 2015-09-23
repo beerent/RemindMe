@@ -1,6 +1,7 @@
 package popup;
 
 import java.awt.Dimension;
+import java.util.Random;
 
 import javax.swing.*;
 
@@ -8,22 +9,26 @@ public class Popup extends Thread{
 	private String title;
 	private String text;
 	
-	JFrame frame;
+	private JFrame jframe;
+	private JPanel jpanel;
 	
 	public Popup(){
-		this.frame = null;
+		this.jframe = null;
+		this.jpanel = null;
 		this.title = null;
 		this.text = null;
 	}
 	
 	public Popup(String text){
-		this.frame = null;
+		this.jframe = null;
+		this.jpanel = null;
 		this.title = null;
 		this.text = text;
 	}
 	
 	public Popup(String title, String text){
-		this.frame = null;
+		this.jframe = null;
+		this.jpanel = null;
 		this.title = title;
 		this.text = text;
 	}
@@ -36,19 +41,29 @@ public class Popup extends Thread{
     	if (this.text == null)
     		return;
         //Create and set up the window.
-        this.frame = new JFrame(this.title);
-
-        //Add the ubiquitous "Hello World" label.
-        JLabel label = new JLabel(this.text);
-        JButton button = new JButton("button a");
-        button.setPreferredSize(new Dimension(20, 40));
+        this.jframe = new JFrame(this.title);
+        this.jframe.setSize(200, 200);
+        this.jpanel = new JPanel();
+        this.jpanel.setLayout(null);
+        this.jframe.add(this.jpanel);
         
-        frame.getContentPane().add(label);
-        frame.getContentPane().add(button);
+        Random rand = new Random();
+        int ran1 = rand.nextInt(1000);
+        int ran2 = rand.nextInt(1000);
+        this.jframe.setLocation(ran1, ran2);
+
+        JLabel label = new JLabel(String.format("<html><div style=\"width:%dpx;\">%s</div><html>", 190, this.text));
+        //JLabel label = new JLabel(this.text);
+        //JTextArea label = new JTextArea(this.text);
+        label.setBounds(5, 5, 180, 25);
+        this.jpanel.add(label);
+        
+        JButton mark_as_read = new JButton("Mark As Read");
+        mark_as_read.setBounds(5, 30, 180, 25);
+        this.jpanel.add(mark_as_read);
 
         //Display the window.
-        frame.pack();
-        frame.setVisible(true);
+        jframe.setVisible(true);
     }
     
     public void setTitle(String title){
@@ -60,10 +75,10 @@ public class Popup extends Thread{
 	}
 
 	public void setVisible(boolean b) {
-		this.frame.setVisible(b);
+		this.jframe.setVisible(b);
 	}
 	
 	public void unpop(){
-		this.frame.dispose();
+		this.jframe.dispose();
 	}
 }

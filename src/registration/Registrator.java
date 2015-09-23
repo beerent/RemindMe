@@ -2,6 +2,7 @@ package registration;
 
 import database.DatabaseHandler;
 import user.UserDAO;
+import user.UserManager;
 
 public class Registrator {
 	private DatabaseHandler database_handler;
@@ -18,8 +19,8 @@ public class Registrator {
 	}
 	
 	private boolean registerUser(String username, String email, String password){
-		UserDAO userDao = UserDAO.getInstance();
-		return userDao.registerUser(database_handler, username, email, password);
+		UserManager user_manager = new UserManager(this.database_handler);
+		return user_manager.createNewUser(username, email, password);
 		
 	}
 

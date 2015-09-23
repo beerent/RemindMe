@@ -1,41 +1,36 @@
 package user;
 
-import java.security.NoSuchAlgorithmException;
 import database.DatabaseHandler;
 
 public class UserAuthenticator {
-	private static UserAuthenticator user_auth = null;
+	private DatabaseHandler database_handler;
 	
-	private UserAuthenticator(){}
-	
-	public static UserAuthenticator getInstance(){
-		if(user_auth == null)
-			user_auth = new UserAuthenticator();
-		return user_auth;
+	public UserAuthenticator(DatabaseHandler database_handler){
+		this.database_handler = database_handler;
 	}
 	
-	public User authenticateUser(DatabaseHandler database_handler, int user_id, String password){
-		UserDAO userDao = UserDAO.getInstance();
+	public User authenticateUser(int user_id, String password){
+		UserDAO userDao = new UserDAO(this.database_handler);
 		
-		User user = userDao.getUserByID(database_handler, user_id);
+		User user = userDao.getUserByID(user_id);
 		if (user == null)
 			return null;
-		return authenticateUser(userDao, database_handler, user, password);
+		return authenticateUser(user, password);
 	}
 	
 	
 	public User authenticateUser(String user_name, String password){
-		UserDAO userDao = UserDAO.getInstance();
-		DatabaseHandler database_handler = new DatabaseHandler();
+		UserDAO userDao = new UserDAO(database_handler);
 		
-		User user = userDao.getUserByUsername(database_handler, user_name);
+		User user = userDao.getUserByUsername(user_name);
 		if (user == null)
 			return null;
-		return authenticateUser(userDao, database_handler, user, password);
+		return authenticateUser(user, password);
 	}
 	
-	private User authenticateUser(UserDAO userDao, DatabaseHandler database_handler, User user, String password){
-		 boolean authenticated = userDao.userAndPasswordMatch(database_handler, user, password);
+	private User authenticateUser(User user, String password){
+		UserDAO userDao = new UserDAO(database_handler);
+		 boolean authenticated = userDao.userAndPasswordMatch(user, password);
 		 if(authenticated)
 			 return user;
 		 return null;

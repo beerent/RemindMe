@@ -7,5 +7,9 @@ public class XMLReader {
 		this.xml = xml;
 	}
 	
-	
+	public void test(){
+		for(int i = 0; i < xml.length(); i++){
+			
+		}
+	}
 }

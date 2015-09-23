@@ -3,6 +3,10 @@ package server;
 import java.net.Socket;
 import java.util.ArrayList;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import database.DatabaseHandler;
 import logger.Logger;
 import registration.Registrator;
@@ -43,6 +47,9 @@ public class Listener extends Thread{
 		
 		serverLog(1, "opertation requested: " + operation);
 		switch(operation){
+			case "auth":
+				authenticate(socket_writer, socket_reader);
+				break;
 			case "login":
 				login(socket_writer, socket_reader);
 				break;
@@ -52,8 +59,32 @@ public class Listener extends Thread{
 		}
 	}
 	
+	private void authenticate(SocketWriter socket_writer, SocketReader socket_reader){
+		socket_writer.write("OK"); //OK
+		String username = socket_reader.read();
+		String password = socket_reader.read();
+		
+		UserAuthenticator user_auth = new UserAuthenticator(this.database_handler);
+		User user = user_auth .authenticateUser(username, password);
+		
+		if(user == null)
+			socket_writer.write("denied");
+		
+		serverLog(2, "user: " + user.getUsername() + " (" + user.getUserID() + ") authenticated.");
+		
+		JSONObject user_json = new JSONObject();
+		try {
+			user_json.put("username", user.getUsername());
+			user_json.put("user_id", user.getUserID());
+		} catch (JSONException e2) {
+			e2.printStackTrace();
+		}
+		
+		socket_writer.write(user_json.toString());	
+	}
+	
 	private void login(SocketWriter socket_writer, SocketReader socket_reader){
-		UserAuthenticator user_auth = UserAuthenticator.getInstance();
+		UserAuthenticator user_auth = new UserAuthenticator(this.database_handler);
 		
 		socket_writer.write("OK"); //OK
 		String username = socket_reader.read();
@@ -67,7 +98,6 @@ public class Listener extends Thread{
 		if(this.quit)
 			return;
 		
-		
 		serverLog(2, "user: " + user.getUsername() + " (" + user.getUserID() + ") connected.");
 		socket_writer.write("OK");
 		serverLog(4, "responded OK to user");
@@ -80,11 +110,23 @@ public class Listener extends Thread{
 		}
 		
 		int i = 0;
-		ReminderDAO reminder_dao = ReminderDAO.getInstance();
+		ReminderDAO reminder_dao = new ReminderDAO(this.database_handler);
 		switch(request.get(i++)){
+			case "personal":
+				serverLog(4, "personal");
+				switch(request.get(i++)){
+					case "info":
+						break;
+				}
+				break;
+				
 			case "get":
 				serverLog(4, "get");
 				switch(request.get(i++)){
+					case "user":
+						serverLog(4, "user");
+						String requested_username = request.get(i);					
+						break;
 					case "updates":
 						serverLog(4, "updates");
 						socket_writer.write("1");
@@ -92,39 +134,54 @@ public class Listener extends Thread{
 					case "reminders":
 						ArrayList<Reminder> reminders;
 						serverLog(4, "reminders");
-						String op = null;
+						String reminder_op = null;
 						switch(request.get(i++)){
 							case "new":
-								op = "new";
+								reminder_op = "new";
 								break;
 							case "read":
-								op = "read";
+								reminder_op = "read";
 								break;
 							case "all":
-								op = "all";
+								reminder_op = "all";
 								break;
 						}
-						reminders = reminder_dao.getReminders(database_handler, user, op);
-						XMLWriter xml = new XMLWriter();
+						reminders = reminder_dao.getReminders(user, reminder_op);
 						serverLog(2, "sending " + reminders.size() + " reminders");
-						xml.openParent("reminders");
-						for(Reminder reminder : reminders){
-							xml.openParent("reminder");
-							xml.addChild("id", "" + reminder.getReminderID());
-							xml.addChild("text", reminder.getReminder());
-							String read = "0";
-							if(reminder.isRead())
-								read = "1";
-							xml.addChild("read", read);
-							xml.closeParent("reminder");
-						}
-						xml.closeParent("reminders");
-						try {
-							socket_writer.write(xml.getXML());
-						} catch (Exception e) {
-							socket_writer.write("ERR");
+						try{
+							JSONObject reminder_json = new JSONObject();
+							JSONArray reminder_json_array = new JSONArray();
+							for(Reminder reminder : reminders){
+								JSONObject temp_json = new JSONObject();
+								temp_json.put("id", reminder.getReminderID());
+								temp_json.put("text", reminder.getReminder());
+								String read = "0";
+								if(reminder.isRead())
+									read = "1";
+								temp_json.put("read", read);
+								reminder_json_array.put(temp_json);
+							}
+							reminder_json.put("reminder", reminder_json_array);
+							socket_writer.write(reminder_json.toString());
+						}catch(Exception e){
 							e.printStackTrace();
 						}
+						break;
+					case "reminder_count":
+						serverLog(4, "reminder_count");
+						String count_op = request.get(i++);
+						serverLog(4, "requested " + count_op + " reminders");
+						int count = reminder_dao.getReminderCount(user, count_op);
+						XMLWriter reminder_count_xml = new XMLWriter();
+						reminder_count_xml.openParent("reminder_count");
+						reminder_count_xml.addChild("count", ""+count);
+						reminder_count_xml.closeParent("reminder_count");
+					try {
+						serverLog(2, "sending: " + reminder_count_xml.getXML());
+						socket_writer.write(reminder_count_xml.getXML());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 						break;
 				}		
 				break;
@@ -135,7 +192,7 @@ public class Listener extends Thread{
 						serverLog(4, "reminder");
 						String reminder = request.get(i);
 						serverLog(2, "adding reminder to database: " + reminder);
-						reminder_dao.addReminder(database_handler, user, reminder);
+						reminder_dao.addReminder(user, reminder);
 						socket_writer.write("OK");
 						break;
 				}
@@ -152,7 +209,7 @@ public class Listener extends Thread{
 								serverLog(4, "read");
 								int read = Integer.parseInt(request.get(i));
 								serverLog(4, "updating to read: " + read);
-								reminder_dao.markReminderAsRead(this.database_handler, user, reminder, read);
+								reminder_dao.markReminderAsRead(user, reminder, read);
 								break;
 						}
 						break;

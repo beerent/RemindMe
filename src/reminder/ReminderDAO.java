@@ -8,17 +8,13 @@ import user.User;
 import user.UserDAO;
 
 public class ReminderDAO {
-	private static ReminderDAO instance = null;
+	private DatabaseHandler database_handler;
 	
-	private ReminderDAO(){}
-	
-	public static ReminderDAO getInstance() {
-		if(instance == null)
-			instance = new ReminderDAO();
-		return instance;
+	public ReminderDAO(DatabaseHandler database_handler){
+		this.database_handler = database_handler;
 	}
 	
-	public ArrayList<Reminder> getReminders(DatabaseHandler database_handler, User user, String option){
+	public ArrayList<Reminder> getReminders(User user, String option){
 		ArrayList<Reminder> reminders = new ArrayList<Reminder>();
 		
 		String sql = null;
@@ -50,13 +46,24 @@ public class ReminderDAO {
 		return reminders;	
 	}
 	
-	public void addReminder(DatabaseHandler database_handler, User user, String reminder){
+	public void addReminder(User user, String reminder){
 		String sql = "insert into reminders (user_id, reminder) values (" + user.getUserID() + ", '"+ reminder +"')";
 		database_handler.executeInsert(sql);
 	}
 	
-	public void markReminderAsRead(DatabaseHandler database_handler, User user, Reminder reminder, int read){
+	public void markReminderAsRead(User user, Reminder reminder, int read){
 		String sql = "update reminders set is_read = "+ read +" where reminder_id = " + reminder.getReminderID();
 		database_handler.executeInsert(sql);
+	}
+
+	public int getReminderCount(User user, String count_op) {
+		String op = "";
+		if(count_op.equals("new"))
+			op = " and is_read = 0";
+		else if(count_op.equals("read"))
+			op = " and is_read = 1";
+		String sql = "select count(*) as total from reminders where user_id = " + user.getUserID() + op;
+		QueryResult result = database_handler.executeQuery(sql);
+		return Integer.parseInt(result.getElement(0, 0));
 	}
 }

@@ -26,4 +26,11 @@ public class Reminder {
 	public int getReminderID(){
 		return reminder_id;
 	}
+	
+	public String toString(){
+		String read = "unread";
+		if(this.read)
+			read = "read";
+		return "" + reminder_id + " (" + read + "): " + reminder;
+	}
 }
