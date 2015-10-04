@@ -59,7 +59,7 @@ public class ReminderCommunicator {
 	}
 	
 	private void login(){
-		this.client_socket = new ClientSocket("localhost", 1313);
+		this.client_socket = new ClientSocket("72.182.73.183", 1313);
 		client_socket.write("login");
 		client_socket.read();
 		client_socket.write(user.getUsername());

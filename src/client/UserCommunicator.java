@@ -7,7 +7,7 @@ import user.User;
 
 public class UserCommunicator {
 	private static final int server_port = 1313;
-	private static final String server_address = "localhost";
+	private static final String server_address = "72.182.73.183";
 	private ClientSocket client_socket;
 	
 	public UserCommunicator(){

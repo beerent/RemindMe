@@ -9,7 +9,7 @@ import socketio.SocketWriter;
 
 public class RemindMeClient {
 	private static final int server_port = 1313;
-	private static final String server_address = "localhost";
+	private static final String server_address = "72.182.73.183";
 	private SocketReader socket_reader;
 	private SocketWriter socket_writer;
 	
